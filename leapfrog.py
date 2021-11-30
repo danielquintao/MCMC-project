@@ -21,11 +21,9 @@ def leapfrog(theta, v, eps, L, gradU=None, U=None, pi=None, visited=None):
     if gradU is None and U is None and pi is None:
         raise ValueError("At least one among gradU, U and pi should be given")
     if gradU is None:
-        U = lambda x: -np.log(pi(x)) if U is None else U
+        U = (lambda x: -np.log(pi(x))) if U is None else U
         gradU = grad(U)
     # Leapfrog
-    # Notice that this implementation may look like Euler Integration, but it is indeed Leapfrog
-    # (the lines just before and just after the loop make all the difference)
     for _ in range(L):
         v = v - eps / 2 * gradU(theta)
         theta = theta + eps * v
@@ -42,8 +40,10 @@ if __name__ == "__main__":
     theta0 = np.array([0,-0.5])
     v0 = np.array([0,-1])
     eps = 0.1
+
+    # API 1 - calling leapfrog with gradU
     visited = []
-    _ = leapfrog(theta0, v0, eps, int(4*np.pi/eps), gradU, visited=visited)
+    _ = leapfrog(theta0, v0, eps, int(4*np.pi/eps), gradU=gradU, visited=visited)
     lfpathx = [x[0][0] for x in visited]
     lfpathy = [x[0][1] for x in visited]
 
@@ -55,6 +55,44 @@ if __name__ == "__main__":
     s = np.dstack((X, Y))
     Z = np.array([[toy.pi(s[i,j]) for j in range(nb_points)] for i in range(nb_points)]).squeeze()
 
+
+    plt.figure()
+    plt.contourf(X, Y, Z, cmap="PuBu_r")
+    plt.plot(lfpathx, lfpathy, marker='o', markersize=2, color='k', markeredgecolor='orange')
+    plt.show()
+
+    # API 2 - calling leapfrog with U
+    visited = []
+    _ = leapfrog(theta0, v0, eps, int(4 * np.pi / eps), U=toy.U, visited=visited)
+    lfpathx = [x[0][0] for x in visited]
+    lfpathy = [x[0][1] for x in visited]
+
+    grid_lim = 3
+    nb_points = 100
+    xplot = np.linspace(-grid_lim, grid_lim, nb_points)
+    yplot = np.linspace(-grid_lim, grid_lim, nb_points)
+    X, Y = np.meshgrid(xplot, yplot)
+    s = np.dstack((X, Y))
+    Z = np.array([[toy.pi(s[i, j]) for j in range(nb_points)] for i in range(nb_points)]).squeeze()
+
+    plt.figure()
+    plt.contourf(X, Y, Z, cmap="PuBu_r")
+    plt.plot(lfpathx, lfpathy, marker='o', markersize=2, color='k', markeredgecolor='orange')
+    plt.show()
+
+    # API 3 - calling leapfrog with the target distr
+    visited = []
+    _ = leapfrog(theta0, v0, eps, int(4 * np.pi / eps), pi=toy.pi, visited=visited)
+    lfpathx = [x[0][0] for x in visited]
+    lfpathy = [x[0][1] for x in visited]
+
+    grid_lim = 3
+    nb_points = 100
+    xplot = np.linspace(-grid_lim, grid_lim, nb_points)
+    yplot = np.linspace(-grid_lim, grid_lim, nb_points)
+    X, Y = np.meshgrid(xplot, yplot)
+    s = np.dstack((X, Y))
+    Z = np.array([[toy.pi(s[i, j]) for j in range(nb_points)] for i in range(nb_points)]).squeeze()
 
     plt.figure()
     plt.contourf(X, Y, Z, cmap="PuBu_r")
