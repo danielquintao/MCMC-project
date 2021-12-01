@@ -42,7 +42,7 @@ if __name__ == "__main__":
     eps = 0.1
 
     # API 1 - calling leapfrog with gradU
-    visited = []
+    visited = [(theta0, v0)]
     _ = leapfrog(theta0, v0, eps, int(4*np.pi/eps), gradU=gradU, visited=visited)
     lfpathx = [x[0][0] for x in visited]
     lfpathy = [x[0][1] for x in visited]
@@ -62,7 +62,7 @@ if __name__ == "__main__":
     plt.show()
 
     # API 2 - calling leapfrog with U
-    visited = []
+    visited = [(theta0, v0)]
     _ = leapfrog(theta0, v0, eps, int(4 * np.pi / eps), U=toy.U, visited=visited)
     lfpathx = [x[0][0] for x in visited]
     lfpathy = [x[0][1] for x in visited]
@@ -81,7 +81,7 @@ if __name__ == "__main__":
     plt.show()
 
     # API 3 - calling leapfrog with the target distr
-    visited = []
+    visited = [(theta0, v0)]
     _ = leapfrog(theta0, v0, eps, int(4 * np.pi / eps), pi=toy.pi, visited=visited)
     lfpathx = [x[0][0] for x in visited]
     lfpathy = [x[0][1] for x in visited]
