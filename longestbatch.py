@@ -4,9 +4,46 @@ from leapfrog import leapfrog
 from toy import Simple2DGaussianMixture
 import matplotlib.pyplot as plt
 
-def computeEmpiricalBatchDistribution():
-    pass
-    return
+def computeEmpiricalBatchDistribution(theta, eps, L, K, U=None, pi=None, visited=None):
+    """
+    Empirical distribution of longest batches. You must provide U or pi.
+    :param theta: initial position
+    :param eps: step size
+    :param L: number of steps for the leapfrog integrator
+    :param K: number of iterations
+    :param U: potential function U. Defaults to None.
+    :param pi: target distribution up to a multiplicative constant (pi is prop. to exp(-U)). Defaults to None.
+    :param visited: list of lists with longestBatch path for each visited state (we do nothing if it is None).
+    :return: list with the longest batch at each visited point (empirical distribution of longest batches)
+    """
+    if U is None and pi is None:
+        raise ValueError("U or pi must be given")
+    if U is None:
+        U = lambda x: -np.log(pi(x))
+    gradU = grad(U)
+    # define hamiltonian
+    def H(theta, v):
+        return U(theta) + 0.5 * np.sum(v * v)
+    empdistr = []
+    dim = len(theta)
+    for _ in range(K):
+        # compute candidate state and longest batch for current state:
+        v = np.random.multivariate_normal(np.zeros(dim), np.eye(dim))
+        visited_temp = [(theta, v)] if visited is not None else None
+        theta_L, v_L, l = longestBatch(theta, v, eps, L, gradU, visited=visited_temp)
+        if l < L:  # we still need to walk some steps
+            theta_L, v_L = leapfrog(theta_L, v_L, eps, L-l, gradU)
+        # accept or reject update:
+        u = np.random.rand()
+        if np.log(u) < H(theta, v) - H(theta_L, -v_L):
+            # accept
+            theta, v = theta_L, -v_L
+        # update empirical batch distribution:
+        empdistr.append(l)
+        # log information:
+        if visited is not None:
+            visited.append(visited_temp)
+    return empdistr
 
 def longestBatch(theta, v, eps, L, gradU=None, U=None, pi=None, visited=None):
     """
@@ -76,4 +113,25 @@ if __name__=="__main__":
     plt.plot(lfpathx0, lfpathy0, marker='o', markersize=2, color='k', markeredgecolor='orange')
     plt.plot(lfpathx1, lfpathy1, marker='o', markersize=2, color='k', markeredgecolor='orange')
     plt.plot(lfpathx2, lfpathy2, marker='o', markersize=2, color='k', markeredgecolor='orange')
+    plt.show()
+
+    # test computeEmpiricalBatchDistribution
+    np.random.seed(0)
+
+    visited = []  # now, visited will be a list of lists
+    empdistr = computeEmpiricalBatchDistribution(theta0, eps, 10, 5, toy.U, visited=visited)
+    print(empdistr)
+    mainpath = [longbatch[0] for longbatch in visited]
+    mainpathx = [x[0][0] for x in mainpath]
+    mainpathy = [x[0][1] for x in mainpath]
+
+    cmaps = ['Greys', 'Greens', 'Reds']
+    ncmaps = len(cmaps)
+    plt.figure()
+    plt.contourf(X, Y, Z, cmap="PuBu_r")
+    for i,batch in enumerate(visited):
+        plt.plot([x[0][0] for x in batch], [x[0][1] for x in batch], color='k', zorder=1)
+        plt.scatter([x[0][0] for x in batch], [x[0][1] for x in batch],
+                 marker='o', s=10, c=np.arange(len(batch)), cmap=cmaps[i - ncmaps*(i//ncmaps)], zorder=2)
+    plt.plot(mainpathx, mainpathy, marker='D', markersize=5, color='purple')
     plt.show()
