@@ -46,6 +46,7 @@ class Simple2DGaussianMixture():
         return -np.log(self.piUpToConstant(theta))
 
     def H(self, theta, v, M=np.eye(2)):
+        v = v.reshape(-1, 1)
         return self.U(theta) + v.T @ M @ v / 2
 
     def HUpToConstant(self, theta, v, M=np.eye(2)):
