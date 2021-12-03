@@ -89,16 +89,19 @@ if __name__=="__main__":
     print("l =", l)
     lfpathx0 = [x[0][0] for x in visited]
     lfpathy0 = [x[0][1] for x in visited]
+    print(theta0, v0)
     visited = [(theta1, v1)]
     _, _, l = longestBatch(theta1, v1, eps, int(4 * np.pi / eps), gradU=gradU, visited=visited)
     print("l =", l)
     lfpathx1 = [x[0][0] for x in visited]
     lfpathy1 = [x[0][1] for x in visited]
+    print(theta1, v1)
     visited = [(theta2, v2)]
     _, _, l = longestBatch(theta2, v2, eps, int(4 * np.pi / eps), gradU=gradU, visited=visited)
     print("l =", l)
     lfpathx2 = [x[0][0] for x in visited]
     lfpathy2 = [x[0][1] for x in visited]
+    print(theta2, v2)
 
     grid_lim = 3
     nb_points = 100
@@ -120,7 +123,7 @@ if __name__=="__main__":
 
     visited = []  # now, visited will be a list of lists
     empdistr = computeEmpiricalBatchDistribution(theta0, eps, 10, 5, toy.U, visited=visited)
-    print(empdistr)
+    print(empdistr, theta0)
     mainpath = [longbatch[0] for longbatch in visited]
     mainpathx = [x[0][0] for x in mainpath]
     mainpathy = [x[0][1] for x in mainpath]

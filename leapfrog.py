@@ -54,6 +54,7 @@ if __name__ == "__main__":
     _ = leapfrog(theta0, v0, eps, int(4*np.pi/eps), gradU=gradU, visited=visited)
     lfpathx = [x[0][0] for x in visited]
     lfpathy = [x[0][1] for x in visited]
+    print(theta0, v0)
 
     plt.figure()
     plt.contourf(X, Y, Z, cmap="PuBu_r")
@@ -65,6 +66,7 @@ if __name__ == "__main__":
     _ = leapfrog(theta0, v0, eps, int(4 * np.pi / eps), U=toy.U, visited=visited)
     lfpathx = [x[0][0] for x in visited]
     lfpathy = [x[0][1] for x in visited]
+    print(theta0, v0)
 
     plt.figure()
     plt.contourf(X, Y, Z, cmap="PuBu_r")
@@ -76,6 +78,7 @@ if __name__ == "__main__":
     _ = leapfrog(theta0, v0, eps, int(4 * np.pi / eps), pi=toy.pi, visited=visited)
     lfpathx = [x[0][0] for x in visited]
     lfpathy = [x[0][1] for x in visited]
+    print(theta0, v0)
 
     plt.figure()
     plt.contourf(X, Y, Z, cmap="PuBu_r")
