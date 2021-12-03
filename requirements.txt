@@ -1,0 +1,13 @@
+## conda create -n mcmc python=3.7.12 -c conda-forge
+## pip install -r requirements.txt
+## OR conda install --file requirements.txt -c conda-forge --> OK
+
+numpy==1.19.5
+pandas==1.1.5
+matplotlib==3.2.2
+seaborn==0.11.2
+
+scipy==1.4.1
+tqdm==4.62.3
+
+autograd
