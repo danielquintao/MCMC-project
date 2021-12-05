@@ -18,7 +18,7 @@ def findReasonableEpsilon(theta, U):
     log_rho = log_accept_proba(theta, v, theta_new, v_new, U)
     condition = log_rho + np.log(2) #use to compare acceptance probability with 0.5
     a = 2 * (condition >0) - 1
-    while a * (condition>0) > 0:
+    while a * condition > 0:
         eps = (2**a) * eps
         theta_new, v_new = leapfrog(theta=theta, v=v, eps=eps, L=1, U=U)
         log_rho = log_accept_proba(theta, v, theta_new, v_new, U)
