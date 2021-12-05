@@ -9,7 +9,7 @@ import autograd.numpy as np
 import numpy
 import time
 
-def eHMC(theta_0, eps, emp_L, N, U=None, pi=None, visited=None):
+def eHMC(theta_0, eps, emp_L, N, M=None,U=None, pi=None, visited=None):
     '''
     :param theta_0: starting position
     :param eps: step size
@@ -39,9 +39,11 @@ def eHMC(theta_0, eps, emp_L, N, U=None, pi=None, visited=None):
 
     dim = len(theta_0)
     for k in range(N):
-        v=np.random.multivariate_normal(np.zeros(dim), np.eye(dim))
+        if M is None:
+            M=np.eye(dim)
+
+        v=np.random.multivariate_normal(np.zeros(dim), M )
         L= numpy.random.choice(emp_L, size=1)[0]
-        print(L)
         theta_star, v_star = leapfrog(thetas[-1], v, eps, L, gradU, U, pi, visited)
         rho = np.exp(H(thetas[-1], v) - H(theta_star, v_star))
         event = np.random.uniform(0, 1)
@@ -52,7 +54,7 @@ def eHMC(theta_0, eps, emp_L, N, U=None, pi=None, visited=None):
             thetas.append(thetas[-1])
             momentums.append(v)
 
-    print(time.time() - start)
+    print("Time", time.time() - start)
     return thetas
 
 
@@ -74,8 +76,8 @@ if __name__=="__main__":
     print(emp_L, theta0)
 
     #test eHMC
-
-    positions = eHMC(theta0, eps, emp_L, N, U=toy.U)
+    visited1= []
+    positions = eHMC(theta0, eps, emp_L, N, U=toy.U, visited=visited1)
     print('positions', positions)
 
     lfpathx = [el[0][0] for el in positions]
@@ -91,8 +93,17 @@ if __name__=="__main__":
     X, Y = np.meshgrid(xplot, yplot)
     s = np.dstack((X, Y))
     Z = np.array([[toy.pi(s[i, j]) for j in range(nb_points)] for i in range(nb_points)]).squeeze()
+
+    cmaps = ['Greys', 'Greens', 'Reds']
+    ncmaps = len(cmaps)
+
     plt.figure()
     plt.contourf(X, Y, Z, cmap="PuBu_r")
+    '''for i, batch in enumerate(visited1):
+        plt.plot([x[0][0] for x in batch], [x[0][1] for x in batch], color='k', zorder=1)
+        plt.scatter([x[0][0] for x in batch], [x[0][1] for x in batch],
+                    marker='o', s=10, c=np.arange(len(batch)), cmap=cmaps[i - ncmaps * (i // ncmaps)], zorder=2)'''
+
     plt.plot(lfpathx, lfpathy, marker='D', markersize=5, color='purple', markeredgecolor='orange')
     plt.show()
 
