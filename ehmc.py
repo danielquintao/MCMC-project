@@ -1,5 +1,6 @@
 from leapfrog import leapfrog
 from longestbatch import computeEmpiricalBatchDistribution
+from utils import H
 
 import matplotlib.pyplot as plt
 
@@ -23,7 +24,6 @@ def eHMC(theta_0, eps, emp_L, N, M=None,U=None, pi=None, visited=None):
     :return: list of accepted positions
     '''
 
-    start = time.time()
     thetas = [theta_0.reshape(1, -1)]
     momentums = []
 
@@ -33,19 +33,16 @@ def eHMC(theta_0, eps, emp_L, N, M=None,U=None, pi=None, visited=None):
         U = lambda x: -np.log(pi(x))
     gradU = grad(U)
 
-    # define hamiltonian
-    def H(theta, v):
-        return U(theta) + 0.5 * np.sum(v * v)
+    if M is None:
+        M = np.eye(len(theta_0))
+    Minv = np.linalg.inv(M)
 
-    dim = len(theta_0)
     for k in range(N):
-        if M is None:
-            M=np.eye(dim)
 
-        v=np.random.multivariate_normal(np.zeros(dim), M )
+        v=np.random.multivariate_normal(np.zeros(len(theta_0)), M)
         L= numpy.random.choice(emp_L, size=1)[0]
-        theta_star, v_star = leapfrog(thetas[-1], v, eps, L, gradU, U, pi, visited)
-        rho = np.exp(H(thetas[-1], v) - H(theta_star, v_star))
+        theta_star, v_star = leapfrog(thetas[-1], v, eps, L, M, gradU, U, pi, visited)
+        rho = np.exp(H(thetas[-1], v, U, Minv) - H(theta_star, v_star, U, Minv))
         event = np.random.uniform(0, 1)
         if event <= rho:
             thetas.append(theta_star)
@@ -54,7 +51,6 @@ def eHMC(theta_0, eps, emp_L, N, M=None,U=None, pi=None, visited=None):
             thetas.append(thetas[-1])
             momentums.append(v)
 
-    print("Time", time.time() - start)
     return thetas
 
 
@@ -72,19 +68,15 @@ if __name__=="__main__":
 
     # find emp_L using computeEmpiricalBatchDistribution
     visited = []  # now, visited will be a list of lists
-    emp_L=computeEmpiricalBatchDistribution(theta0, eps, 10, 5, toy.U, visited=visited)
-    print(emp_L, theta0)
+    emp_L=computeEmpiricalBatchDistribution(theta0, eps, 10, 5, U=toy.U, visited=visited)
 
     #test eHMC
     visited1= []
     positions = eHMC(theta0, eps, emp_L, N, U=toy.U, visited=visited1)
-    print('positions', positions)
 
     lfpathx = [el[0][0] for el in positions]
     lfpathy = [el[0][1] for el in positions]
 
-    print(lfpathx)
-    print(lfpathy)
 
     grid_lim = 4
     nb_points = 100

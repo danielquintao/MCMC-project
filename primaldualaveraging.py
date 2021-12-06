@@ -3,7 +3,7 @@ from leapfrog import leapfrog
 import scipy.stats as st
 from utils import log_accept_proba
 
-def findReasonableEpsilon(theta, U):
+def findReasonableEpsilon(theta, U, M=None):
     '''
     Heuristics for choosing an initial value of epsilon BEFORE tuning
     -- Remark as in leapflog file, we suppose at this version that M = Identity matrix---
@@ -14,15 +14,15 @@ def findReasonableEpsilon(theta, U):
     v = st.norm(0, 1).rvs(n)
     #mean, cov = np.zeros(n), numpy.eye(n)
     #v = np.random.multivariate_normal(mean, cov)
-    theta_new, v_new = leapfrog(theta=theta, v=v, eps=eps, L=1, U=U)
-    log_rho = log_accept_proba(theta, v, theta_new, v_new, U)
+    theta_new, v_new = leapfrog(theta=theta, v=v, eps=eps, L=1, M=M, U=U)
+    log_rho = log_accept_proba(theta, v, theta_new, v_new, U, M)
     condition = log_rho + np.log(2) #use to compare acceptance probability with 0.5
     a = 2 * (condition >0) - 1
     a = a.astype('float')
     while a * condition > 0:
         eps = (2**a) * eps
-        theta_new, v_new = leapfrog(theta=theta, v=v, eps=eps, L=1, U=U)
-        log_rho = log_accept_proba(theta, v, theta_new, v_new, U)
+        theta_new, v_new = leapfrog(theta=theta, v=v, eps=eps, L=1, M=M, U=U)
+        log_rho = log_accept_proba(theta, v, theta_new, v_new, U, M)
         condition = log_rho + np.log(2)
     return eps
 

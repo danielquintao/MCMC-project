@@ -1,13 +1,14 @@
 import matplotlib.pyplot as plt
 
 from leapfrog import leapfrog
+from utils import H
 from toy import Simple2DGaussianMixture
 from autograd import grad
 import autograd.numpy as np
 import time
 
 
-def stantardHMC(theta_0, eps, L, N, M, U=None, pi=None, visited=None):
+def stantardHMC(theta_0, eps, L, N, M=None, U=None, pi=None, visited=None):
     '''
     :param theta_0: starting position
     :param eps: step sizer epsilon
@@ -20,7 +21,6 @@ def stantardHMC(theta_0, eps, L, N, M, U=None, pi=None, visited=None):
     :param visited: list to add each visited node
     :return: list of accepted positions
     '''
-    start = time.time()
     thetas = [theta_0.reshape(1, -1)]
     momentums = []
 
@@ -37,14 +37,15 @@ def stantardHMC(theta_0, eps, L, N, M, U=None, pi=None, visited=None):
     if U is None:
         U = lambda x: -np.log(pi(x))
     gradU = grad(U)
-    # define hamiltonian
-    def H(theta, v):
-        return U(theta) + 0.5 * np.sum(v * v)
+
+    if M is None:
+        M = np.eye(len(theta_0))
+    Minv = np.linalg.inv(M)
 
     for k in range(N):
-        v = np.random.multivariate_normal(np.zeros(2), M, 1)
-        theta_star, v_star = leapfrog(thetas[-1], v, eps, L, gradU, U, pi, visited)
-        rho = np.exp(H(thetas[-1], v) - H(theta_star, v_star))
+        v = np.random.multivariate_normal(np.zeros(theta_0.shape), M, 1)
+        theta_star, v_star = leapfrog(thetas[-1], v, eps, L, M, gradU, U, pi, visited)
+        rho = np.exp(H(thetas[-1], v, U, Minv) - H(theta_star, v_star, U, Minv))
         event = np.random.uniform(0, 1)
         if event <= rho:
             thetas.append(theta_star)
@@ -52,7 +53,6 @@ def stantardHMC(theta_0, eps, L, N, M, U=None, pi=None, visited=None):
         else:
             thetas.append(thetas[-1])
             momentums.append(v)
-    print(time.time() - start)
 
     return thetas
 
