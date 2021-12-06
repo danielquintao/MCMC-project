@@ -4,13 +4,14 @@ from toy import Simple2DGaussianMixture
 import matplotlib.pyplot as plt
 
 
-def leapfrog(theta, v, eps, L, gradU=None, U=None, pi=None, visited=None):
+def leapfrog(theta, v, eps, L, M=None, gradU=None, U=None, pi=None, visited=None):
     """
     Leapfrog integration. At least one argument among gradU, U and pi must be given (preferably gradU)
-    :param theta: initial position
-    :param v: initial momentum
+    :param theta: initial position (1D)
+    :param v: initial momentum (1D)
     :param eps: step size
     :param L: number of steps
+    :param M: covariance matrice
     :param gradU: gradient of the potential function U. Defaults to None.
     :param U: potential function U. Defaults to None.
     :param pi: target distribution up to a multiplicative constant (pi is prop. to exp(-U)). Defaults to None.
@@ -23,10 +24,13 @@ def leapfrog(theta, v, eps, L, gradU=None, U=None, pi=None, visited=None):
     if gradU is None:
         U = (lambda x: -np.log(pi(x))) if U is None else U
         gradU = grad(U)
+    if M is None:
+        M = np.eye(len(theta))
+    invM = np.linalg.inv(M)
     # Leapfrog
     for _ in range(L):
         v = v - eps / 2 * gradU(theta)
-        theta = theta + eps * v
+        theta = theta + eps * (invM @ v.reshape(-1,1)).flatten()
         v = v - eps / 2 * gradU(theta)
         if visited is not None:
             visited.append((theta, v))

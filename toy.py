@@ -51,3 +51,12 @@ class Simple2DGaussianMixture():
 
     def HUpToConstant(self, theta, v, M=np.eye(2)):
         return self.UUpToConstant(theta) + v.T @ M @ v / 2
+
+
+# TODO
+class MultivariateNormalDistribution():
+    pass
+
+# TODO
+class BayesianLogisticError():
+    pass

@@ -1,16 +1,18 @@
 import autograd.numpy as np
 from autograd import grad
 from leapfrog import leapfrog
+from utils import H, log_accept_proba # TODO -- use log_accept_proba
 from toy import Simple2DGaussianMixture
 import matplotlib.pyplot as plt
 
-def computeEmpiricalBatchDistribution(theta, eps, L, K, U=None, pi=None, visited=None):
+def computeEmpiricalBatchDistribution(theta, eps, L, K, M=None, U=None, pi=None, visited=None):
     """
     Empirical distribution of longest batches. You must provide U or pi.
     :param theta: initial position
     :param eps: step size
     :param L: number of steps for the leapfrog integrator
     :param K: number of iterations
+    :param M: covariance matrice
     :param U: potential function U. Defaults to None.
     :param pi: target distribution up to a multiplicative constant (pi is prop. to exp(-U)). Defaults to None.
     :param visited: list of lists with longestBatch path for each visited state (we do nothing if it is None).
@@ -21,21 +23,23 @@ def computeEmpiricalBatchDistribution(theta, eps, L, K, U=None, pi=None, visited
     if U is None:
         U = lambda x: -np.log(pi(x))
     gradU = grad(U)
-    # define hamiltonian
-    def H(theta, v):
-        return U(theta) + 0.5 * np.sum(v * v)
+
+    if M is None:
+        M = np.eye(len(theta))
+    Minv = np.linalg.inv(M)
+
     empdistr = []
     dim = len(theta)
     for _ in range(K):
         # compute candidate state and longest batch for current state:
         v = np.random.multivariate_normal(np.zeros(dim), np.eye(dim))
         visited_temp = [(theta, v)] if visited is not None else None
-        theta_L, v_L, l = longestBatch(theta, v, eps, L, gradU, visited=visited_temp)
+        theta_L, v_L, l = longestBatch(theta, v, eps, L, M, gradU, visited=visited_temp)
         if l < L:  # we still need to walk some steps
-            theta_L, v_L = leapfrog(theta_L, v_L, eps, L-l, gradU)
+            theta_L, v_L = leapfrog(theta_L, v_L, eps, L-l, M, gradU)
         # accept or reject update:
         u = np.random.rand()
-        if np.log(u) < H(theta, v) - H(theta_L, -v_L):
+        if np.log(u) < H(theta, v, U, Minv) - H(theta_L, -v_L, U, Minv):
             # accept
             theta, v = theta_L, -v_L
         # update empirical batch distribution:
@@ -45,13 +49,14 @@ def computeEmpiricalBatchDistribution(theta, eps, L, K, U=None, pi=None, visited
             visited.append(visited_temp)
     return empdistr
 
-def longestBatch(theta, v, eps, L, gradU=None, U=None, pi=None, visited=None):
+def longestBatch(theta, v, eps, L, M=None, gradU=None, U=None, pi=None, visited=None):
     """
     Computation of longest batch. At least one argument among gradU, U and pi must be given (preferably gradU)
     :param theta: initial position
     :param v: initial momentum
     :param eps: step size
     :param L: number of steps in whose state we are interested (the iteration continues until an U-turn)
+    :param M: covariance matrice
     :param gradU: gradient of the potential function U. Defaults to None.
     :param U: potential function U. Defaults to None.
     :param pi: target distribution up to a multiplicative constant (pi is prop. to exp(-U)). Defaults to None.
@@ -59,12 +64,15 @@ def longestBatch(theta, v, eps, L, gradU=None, U=None, pi=None, visited=None):
     :return: tuple (theta,v,l) where l is the longest batch and theta, v are the state in the Lth path (if l >= L,
              otherwise the last visited state; this is for avoiding to restart leapfrog when calling this method)
     """
+    if M is None:
+        M = np.eye(len(theta))
+    invM = np.linalg.inv(M)
     l = 0
     theta_, v_ = theta.copy(), v.copy()
     theta_L, v_L = None, None
-    while np.sum((theta_ - theta) * v_) >= 0:  # while no U-turn
+    while np.sum((theta_ - theta) * (invM @ v_.reshape(-1,1)).flatten()) >= 0:  # while no U-turn
         l += 1
-        theta_, v_ = leapfrog(theta_, v_, eps, 1, gradU, U, pi, visited)
+        theta_, v_ = leapfrog(theta_, v_, eps, 1, M, gradU, U, pi, visited)
         if l == L:
             theta_L, v_L = theta_.copy(), v_.copy()
     # return longest batch with state at step L if l >= L, else longest batch with last visited state
@@ -122,7 +130,7 @@ if __name__=="__main__":
     np.random.seed(0)
 
     visited = []  # now, visited will be a list of lists
-    empdistr = computeEmpiricalBatchDistribution(theta0, eps, 10, 5, toy.U, visited=visited)
+    empdistr = computeEmpiricalBatchDistribution(theta0, eps, 10, 5, U=toy.U, visited=visited)
     print(empdistr, theta0)
     mainpath = [longbatch[0] for longbatch in visited]
     mainpathx = [x[0][0] for x in mainpath]
