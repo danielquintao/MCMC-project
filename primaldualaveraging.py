@@ -18,6 +18,7 @@ def findReasonableEpsilon(theta, U):
     log_rho = log_accept_proba(theta, v, theta_new, v_new, U)
     condition = log_rho + np.log(2) #use to compare acceptance probability with 0.5
     a = 2 * (condition >0) - 1
+    a = a.astype('float')
     while a * condition > 0:
         eps = (2**a) * eps
         theta_new, v_new = leapfrog(theta=theta, v=v, eps=eps, L=1, U=U)
@@ -27,7 +28,7 @@ def findReasonableEpsilon(theta, U):
 
 
 
-def hmc_dual_averaging(theta, delta, lambd, n_samples, n_samples_adap, U):
+def findReasonableEpsilon_hmc_dual_averaging(theta, delta, lambd, n_samples, n_samples_adap, U):
     """
     Inputs
     ----------
@@ -39,8 +40,9 @@ def hmc_dual_averaging(theta, delta, lambd, n_samples, n_samples_adap, U):
 
     Outputs
     -------
-    samples: samples produced by the HMC.
-    accepted: array of 0 and 1 to display which proposed moves have been accepted
+    eps:
+    #samples: samples produced by the HMC.
+    #accepted: array of 0 and 1 to display which proposed moves have been accepted
     """
     initial_position = np.array(theta)
 
@@ -90,9 +92,9 @@ def hmc_dual_averaging(theta, delta, lambd, n_samples, n_samples_adap, U):
             log_bar_eps = m**(-kappa) * log_eps + (1-m**(-kappa)) * log_bar_eps
         else:
             eps = np.exp(log_bar_eps)
+    return eps
 
-
-    return np.array(samples[1:]), np.array(accepted)
+    #return np.array(samples[1:]), np.array(accepted)
 
 
 if __name__=="__main__":
@@ -100,9 +102,18 @@ if __name__=="__main__":
     toy = Simple2DGaussianMixture()
 
     # test code 1
+    theta = np.array([1, 1])
+    print("Test the first function: eps=", findReasonableEpsilon(theta, toy.U))
+    # test code 1
     theta = np.array([0, 0])
-    print("Test the first function: ", findReasonableEpsilon(theta, toy.U))
+    print("Test the first function: eps=", findReasonableEpsilon(theta, toy.U))
 
+    theta = np.array([3, 3])
+    print("Test the first function: eps=", findReasonableEpsilon(theta, toy.U))
+
+
+    theta = np.array([2, 20])
+    print("Test the first function: eps=", findReasonableEpsilon(theta, toy.U))
     # test code 2
     #theta = np.random.randn(2)
     #delta=0.65
