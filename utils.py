@@ -17,7 +17,7 @@ def log_accept_proba(theta, v, theta_new, v_new, U, M=None):
 
 def H(theta, v, U, Minv):
     v = v.reshape(-1, 1)
-    return U(theta) + 0.5 * np.sum(v.T @ Minv @ v)
+    return np.sum(U(theta)) + 0.5 * np.sum(v.T @ Minv @ v)
 
 if __name__=="__main__":
     # test code
