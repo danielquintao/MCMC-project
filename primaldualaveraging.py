@@ -10,9 +10,9 @@ def findReasonableEpsilon(theta, U, M=None):
     '''
     eps = 1
     n = np.size(theta)
-    v = st.norm(0, 1).rvs(n)
-    #mean, cov = np.zeros(n), numpy.eye(n)
-    #v = np.random.multivariate_normal(mean, cov)
+    # v = st.norm(0, 1).rvs(n)
+    mean, cov = np.zeros(n), np.eye(n)
+    v = np.random.multivariate_normal(mean, cov)
     theta_new, v_new = leapfrog(theta=theta, v=v, eps=eps, L=1, M=M, U=U)
     log_rho = log_accept_proba(theta, v, theta_new, v_new, U, M)
     condition = log_rho + np.log(2) #use to compare acceptance probability with 0.5
@@ -96,9 +96,10 @@ def findReasonableEpsilon_hmc_dual_averaging(theta, delta, lambd, n_samples, n_s
 
 
 if __name__=="__main__":
-    from toy import Simple2DGaussianMixture, LectureExample2
+    from toy import Simple2DGaussianMixture, LectureExample2, MultivariateNormalDistribution
     toy = Simple2DGaussianMixture()
     toy2 = LectureExample2()
+    toy3 = MultivariateNormalDistribution()
 
     #np.random.seed(42)
     # test code 1
@@ -113,17 +114,17 @@ if __name__=="__main__":
     #
     # theta = np.array([2, 20])
     # print("Test the first function: eps=", findReasonableEpsilon(theta, toy.U))
-
-    theta = np.array([2, 20])
-    print("Test the first function: eps=", findReasonableEpsilon(theta, toy2.log_p))
+    #
+    # theta = np.array([2, 20])
+    # print("Test the first function: eps=", findReasonableEpsilon(theta, toy2.log_p))
 
     # test code 2
 
     ##
     print("find best eps after some n_sample_adap steps")
-    theta = np.array([1, 1])
+    theta = np.random.rand(toy3.dim)
     print(findReasonableEpsilon_hmc_dual_averaging(theta=theta, delta=0.65, lambd=5,
-                                                   n_samples=10, n_samples_adap=10, U=toy.U))
+                                                   n_samples=5000, n_samples_adap=5000, U=toy3.U))
 
 
 

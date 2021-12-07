@@ -57,8 +57,18 @@ class Simple2DGaussianMixture():
 
 # TODO
 class MultivariateNormalDistribution():
-    pass
+    def __init__(self):
+        self.dim = 10
+        self.sigma = np.eye(self.dim)
+        for i in range(self.dim):
+            for j in range(i):
+                self.sigma[i,j] = 0.99 ** abs(i-j)
+                self.sigma[j,i] = 0.99 ** abs(i-j)
+        self.sigmainv = np.linalg.inv(self.sigma)
 
+    def U(self, theta):
+        v = theta.reshape(-1,1)
+        return v.T @ self.sigmainv @ v / 2
 # TODO
 class BayesianLogisticError():
     pass
