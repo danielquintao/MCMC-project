@@ -98,22 +98,26 @@ def findReasonableEpsilon_hmc_dual_averaging(theta, delta, lambd, n_samples, n_s
 
 
 if __name__=="__main__":
-    from toy import Simple2DGaussianMixture
+    from toy import Simple2DGaussianMixture, LectureExample2
     toy = Simple2DGaussianMixture()
+    toy2 = LectureExample2()
 
     # test code 1
-    theta = np.array([1, 1])
-    print("Test the first function: eps=", findReasonableEpsilon(theta, toy.U))
-    # test code 1
-    theta = np.array([0, 0])
-    print("Test the first function: eps=", findReasonableEpsilon(theta, toy.U))
-
-    theta = np.array([3, 3])
-    print("Test the first function: eps=", findReasonableEpsilon(theta, toy.U))
-
+    # theta = np.array([1, 1])
+    # print("Test the first function: eps=", findReasonableEpsilon(theta, toy.U))
+    #
+    # theta = np.array([0, 0])
+    # print("Test the first function: eps=", findReasonableEpsilon(theta, toy.U))
+    #
+    # theta = np.array([3, 3])
+    # print("Test the first function: eps=", findReasonableEpsilon(theta, toy.U))
+    #
+    # theta = np.array([2, 20])
+    # print("Test the first function: eps=", findReasonableEpsilon(theta, toy.U))
 
     theta = np.array([2, 20])
-    print("Test the first function: eps=", findReasonableEpsilon(theta, toy.U))
+    print("Test the first function: eps=", findReasonableEpsilon(theta, toy2.log_p))
+
     # test code 2
     #theta = np.random.randn(2)
     #delta=0.65
