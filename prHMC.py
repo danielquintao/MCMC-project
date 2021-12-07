@@ -1,9 +1,9 @@
 
 
 
-def eHMC(theta_0, eps, emp_L, eta, N, M=None,U=None, pi=None, visited=None):
+def prHMC(theta_0, eps, emp_L, eta, N, M=None,U=None, pi=None, visited=None):
     '''
-    :param theta_0: starting position
+    :param theta_0: starting position (1D, otherwise we will flatten)
     :param eps: step size
     :param emp_L: empirical distribution of longest batches
     :param eta: refreshment probability
@@ -21,8 +21,8 @@ def eHMC(theta_0, eps, emp_L, eta, N, M=None,U=None, pi=None, visited=None):
 def LFpath(theta, v, eps, L, M=None, gradU=None, U=None, pi=None):
     """
     Leapfrog integration. At least one argument among gradU, U and pi must be given (preferably gradU)
-    :param theta: initial position (1D)
-    :param v: initial momentum (1D)
+    :param theta: initial position (1D, otherwise we will flatten)
+    :param v: initial momentum (1D, otherwise we will flatten)
     :param eps: step size
     :param L: number of steps
     :param M: covariance matrice
@@ -31,6 +31,8 @@ def LFpath(theta, v, eps, L, M=None, gradU=None, U=None, pi=None):
     :param pi: target distribution up to a multiplicative constant (pi is prop. to exp(-U)). Defaults to None.
     :return: tuple (theta,v) obtained with L steps of the integrator
     """
+    theta = theta.flatten()
+    v = v.flatten()
     # gradient of U
     if gradU is None and U is None and pi is None:
         raise ValueError("At least one among gradU, U and pi should be given")

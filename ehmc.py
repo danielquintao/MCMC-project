@@ -12,7 +12,7 @@ import time
 
 def eHMC(theta_0, eps, emp_L, N, M=None,U=None, pi=None, visited=None):
     '''
-    :param theta_0: starting position
+    :param theta_0: starting position (1D, otherwise we will flatten)
     :param eps: step size
     :param emp_L: empirical distribution of longest batches
     :param N: number of eHMC iterations
@@ -23,8 +23,8 @@ def eHMC(theta_0, eps, emp_L, N, M=None,U=None, pi=None, visited=None):
     :param visited: list to add each visited node
     :return: list of accepted positions
     '''
-
-    thetas = [theta_0.reshape(1, -1)]
+    theta_0 = theta_0.flatten()
+    thetas = [theta_0]
     momentums = []
 
     if U is None and pi is None:
@@ -42,7 +42,7 @@ def eHMC(theta_0, eps, emp_L, N, M=None,U=None, pi=None, visited=None):
         v=np.random.multivariate_normal(np.zeros(len(theta_0)), M)
         L= numpy.random.choice(emp_L, size=1)[0]
         theta_star, v_star = leapfrog(thetas[-1], v, eps, L, M, gradU, U, pi, visited)
-        rho = np.exp(H(thetas[-1], v, U, Minv) - H(theta_star, v_star, U, Minv))
+        rho = np.exp(H(thetas[-1], v, U, Minv) - H(theta_star, -v_star, U, Minv))
         event = np.random.uniform(0, 1)
         if event <= rho:
             thetas.append(theta_star)
@@ -74,8 +74,8 @@ if __name__=="__main__":
     visited1= []
     positions = eHMC(theta0, eps, emp_L, N, U=toy.U, visited=visited1)
 
-    lfpathx = [el[0][0] for el in positions]
-    lfpathy = [el[0][1] for el in positions]
+    lfpathx = [el[0] for el in positions]
+    lfpathy = [el[1] for el in positions]
 
 
     grid_lim = 4

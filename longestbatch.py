@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 def computeEmpiricalBatchDistribution(theta, eps, L, K, M=None, U=None, pi=None, visited=None):
     """
     Empirical distribution of longest batches. You must provide U or pi.
-    :param theta: initial position
+    :param theta: initial position (1D, otherwise we will flatten)
     :param eps: step size
     :param L: number of steps for the leapfrog integrator
     :param K: number of iterations
@@ -18,6 +18,7 @@ def computeEmpiricalBatchDistribution(theta, eps, L, K, M=None, U=None, pi=None,
     :param visited: list of lists with longestBatch path for each visited state (we do nothing if it is None).
     :return: list with the longest batch at each visited point (empirical distribution of longest batches)
     """
+    theta = theta.flatten()
     if U is None and pi is None:
         raise ValueError("U or pi must be given")
     if U is None:
@@ -29,10 +30,10 @@ def computeEmpiricalBatchDistribution(theta, eps, L, K, M=None, U=None, pi=None,
     Minv = np.linalg.inv(M)
 
     empdistr = []
-    dim = len(theta)
+    dim = len(theta.flatten())  # theta.shape should be (n,) or (1,n)
     for _ in range(K):
         # compute candidate state and longest batch for current state:
-        v = np.random.multivariate_normal(np.zeros(dim), np.eye(dim))
+        v = np.random.multivariate_normal(np.zeros(dim), M)
         visited_temp = [(theta, v)] if visited is not None else None
         theta_L, v_L, l = longestBatch(theta, v, eps, L, M, gradU, visited=visited_temp)
         if l < L:  # we still need to walk some steps
@@ -52,8 +53,8 @@ def computeEmpiricalBatchDistribution(theta, eps, L, K, M=None, U=None, pi=None,
 def longestBatch(theta, v, eps, L, M=None, gradU=None, U=None, pi=None, visited=None):
     """
     Computation of longest batch. At least one argument among gradU, U and pi must be given (preferably gradU)
-    :param theta: initial position
-    :param v: initial momentum
+    :param theta: initial position (1D, otherwise we will flatten)
+    :param v: initial momentum (1D, otherwise we will flatten)
     :param eps: step size
     :param L: number of steps in whose state we are interested (the iteration continues until an U-turn)
     :param M: covariance matrice
@@ -64,6 +65,8 @@ def longestBatch(theta, v, eps, L, M=None, gradU=None, U=None, pi=None, visited=
     :return: tuple (theta,v,l) where l is the longest batch and theta, v are the state in the Lth path (if l >= L,
              otherwise the last visited state; this is for avoiding to restart leapfrog when calling this method)
     """
+    theta = theta.flatten()
+    v = v.flatten()
     if M is None:
         M = np.eye(len(theta))
     invM = np.linalg.inv(M)

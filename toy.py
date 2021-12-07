@@ -25,10 +25,12 @@ class Simple2DGaussianMixture():
         self.w2 = 0.4
 
     def mvnpdf1(self, theta):
+        theta = theta.flatten()
         vec = (theta-self.mu1).reshape(-1,1)
         return np.exp(-0.5*vec.T@self.sigma1inv@vec)/(2*np.pi*np.sqrt(self.sigma1det))
 
     def mvnpdf2(self, theta):
+        theta = theta.flatten()
         vec = (theta - self.mu2).reshape(-1, 1)
         return np.exp(-0.5*vec.T@self.sigma2inv@vec)/(2*np.pi*np.sqrt(self.sigma2det))
 

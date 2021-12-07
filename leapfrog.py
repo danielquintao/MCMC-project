@@ -18,6 +18,8 @@ def leapfrog(theta, v, eps, L, M=None, gradU=None, U=None, pi=None, visited=None
     :param visited: list to add each visited node (we do nothing if it is None)
     :return: tuple (theta,v) obtained with L steps of the integrator
     """
+    if theta.shape != v.shape:
+        raise ValueError("theta and v can be either (1,n) or (n,), but should have the same shape")
     # gradient of U
     if gradU is None and U is None and pi is None:
         raise ValueError("At least one among gradU, U and pi should be given")
