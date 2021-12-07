@@ -6,7 +6,6 @@ from utils import log_accept_proba
 def findReasonableEpsilon(theta, U, M=None):
     '''
     Heuristics for choosing an initial value of epsilon BEFORE tuning
-    -- Remark as in leapflog file, we suppose at this version that M = Identity matrix---
     :return: eps
     '''
     eps = 1
@@ -17,8 +16,7 @@ def findReasonableEpsilon(theta, U, M=None):
     theta_new, v_new = leapfrog(theta=theta, v=v, eps=eps, L=1, M=M, U=U)
     log_rho = log_accept_proba(theta, v, theta_new, v_new, U, M)
     condition = log_rho + np.log(2) #use to compare acceptance probability with 0.5
-    a = 2 * (condition >0) - 1
-    a = a.astype('float')
+    a = 2.0 * (condition >0) - 1.0
     while a * condition > 0:
         eps = (2**a) * eps
         theta_new, v_new = leapfrog(theta=theta, v=v, eps=eps, L=1, M=M, U=U)
@@ -54,10 +52,10 @@ def findReasonableEpsilon_hmc_dual_averaging(theta, delta, lambd, n_samples, n_s
     ## Setting parameters step:
     eps = findReasonableEpsilon(theta, U)
     mu = np.log(10*eps)
-    log_bar_eps = 0
-    bar_H = 0
+    log_bar_eps = 0.0
+    bar_H = 0.0
     gamma = 0.05
-    t0 = 10
+    t0 = 10.0
     kappa = 0.75
 
 
@@ -102,6 +100,7 @@ if __name__=="__main__":
     toy = Simple2DGaussianMixture()
     toy2 = LectureExample2()
 
+    #np.random.seed(42)
     # test code 1
     # theta = np.array([1, 1])
     # print("Test the first function: eps=", findReasonableEpsilon(theta, toy.U))
@@ -119,7 +118,13 @@ if __name__=="__main__":
     print("Test the first function: eps=", findReasonableEpsilon(theta, toy2.log_p))
 
     # test code 2
-    #theta = np.random.randn(2)
-    #delta=0.65
-    #samples, accept = hmc_dual_averaging(theta=theta, delta=delta, lambd = 1, n_samples=150, n_samples_adap=50, U=toy.U)
-    pass
+
+    ##
+    print("find best eps after some n_sample_adap steps")
+    theta = np.array([1, 1])
+    print(findReasonableEpsilon_hmc_dual_averaging(theta=theta, delta=0.65, lambd=5,
+                                                   n_samples=10, n_samples_adap=10, U=toy.U))
+
+
+
+
