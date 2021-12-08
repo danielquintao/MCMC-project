@@ -28,6 +28,7 @@ def findReasonableEpsilon(theta, U, M=None):
 
 def findReasonableEpsilon_hmc_dual_averaging(theta, delta, lambd, n_samples, n_samples_adap, U):
     """
+    Algorithm 5 of Hoffman, Gelman "The No-U-Turn Sampler: Adaptively Setting Path Lengths in Hamiltonian Monte Carlo"
     Inputs
     ----------
     theta: a place to start sampling from.
@@ -44,10 +45,8 @@ def findReasonableEpsilon_hmc_dual_averaging(theta, delta, lambd, n_samples, n_s
     """
     initial_position = np.array(theta)
 
-
     samples = [initial_position]
     accepted = []
-
 
     ## Setting parameters step:
     eps = findReasonableEpsilon(theta, U)
@@ -57,7 +56,6 @@ def findReasonableEpsilon_hmc_dual_averaging(theta, delta, lambd, n_samples, n_s
     gamma = 0.05
     t0 = 10.0
     kappa = 0.75
-
 
     ## Get samples setp:
     size = (n_samples, len(theta))
