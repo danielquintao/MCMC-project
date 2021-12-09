@@ -73,7 +73,6 @@ for experiments,delta in zip(eHMC_out,deltas):  # one list of experiments per de
     if compute_for_each:
         for sampling in experiments:  # n_chains samplings per list of experiments
             X = np.array(sampling)  # X has shape (n_iter, dim)
-            X = X[np.newaxis,...]  # minESS expects shape (m, n_iter, dim)
             START = time.time()
             min_ess = minESS(X)
             print('\t\tminESS for single chain = {}, took {:.4f}s'.format(min_ess, time.time()-START))
@@ -101,7 +100,7 @@ x_for_each = np.repeat(deltas, n_chains)
 
 plt.figure()
 if len(minESS_per_chain_eHMC) > 0:
-    plt.scatter(x, minESS_per_chain_eHMC, color='k')
+    plt.scatter(x_for_each, minESS_per_chain_eHMC, color='k')
 plt.plot(deltas, minESS_eHMC, 'rD-')
 plt.xlabel('target acceptance rate')
 plt.title('minESS, eHMC')
@@ -109,7 +108,7 @@ plt.show()
 
 plt.figure()
 if len(ESJD_per_chain_eHMC) > 0:
-    plt.scatter(x, ESJD_per_chain_eHMC, color='k')
+    plt.scatter(x_for_each, ESJD_per_chain_eHMC, color='k')
 plt.plot(deltas, ESJD_eHMC, 'rD-')
 plt.xlabel('target acceptance rate')
 plt.title('ESJD, eHMC')

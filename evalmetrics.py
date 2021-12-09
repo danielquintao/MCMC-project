@@ -10,6 +10,8 @@ def minESS(X):
     returns the min ESS across the d dimensions
     """
     m, n, d = X.shape if len(X.shape) == 3 else (1, X.shape[0], X.shape[1])
+    if m == 1 and len(X.shape) == 3:
+        X = X.squeeze(axis=0)  # we code the method to work for X of shape (n,d) if there is only one chain
 
     n_eff_list = []
     for k in range(d):
@@ -49,8 +51,10 @@ def ESJD(X):
     Expected Square Jump Distance
     """
     m, n, d = X.shape if len(X.shape) == 3 else (1, X.shape[0], X.shape[1])
+    if m == 1 and len(X.shape) == 3:
+        X = X.squeeze(axis=0)  # we code the method to work for X of shape (n,d) if there is only one chain
     if m != 1:
-        result = np.sum((X[:,:n-1,:]- X [:,1:,:])**2, axis=-1) # compute the square norm of the jumps
+        result = np.sum((X[:,:n-1,:]- X[:,1:,:])**2, axis=-1) # compute the square norm of the jumps
         result = np.mean(result, axis =-1)
         result = np.mean(result) # mean over m chains
     else:
@@ -71,5 +75,7 @@ if __name__ == "__main__":
 
     X = np.random.randn(4,20,2)
     print(minESS(X))
+    print(ESJD(X))
     X = np.random.randn(20, 2)
     print(minESS(X))
+    print(ESJD(X))
