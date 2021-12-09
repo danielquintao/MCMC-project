@@ -48,7 +48,7 @@ def stantardHMC(theta_0, eps, L, N, M=None, U=None, pi=None, return_vs=False):
             if return_vs:
                 momentums.append(v)
 
-    return thetas if not return_vs else (tehtas, momentums)
+    return thetas if not return_vs else (thetas, momentums)
 
 
 if __name__ == "__main__":
