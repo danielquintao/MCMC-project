@@ -54,8 +54,6 @@ class Simple2DGaussianMixture():
     def HUpToConstant(self, theta, v, M=np.eye(2)):
         return self.UUpToConstant(theta) + v.T @ M @ v / 2
 
-
-# TODO
 class MultivariateNormalDistribution():
     def __init__(self):
         self.dim = 10
@@ -69,6 +67,7 @@ class MultivariateNormalDistribution():
     def U(self, theta):
         v = theta.reshape(-1,1)
         return v.T @ self.sigmainv @ v / 2
+
 # TODO
 class BayesianLogisticError():
     pass
