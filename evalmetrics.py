@@ -48,10 +48,14 @@ def ESJD(X):
     """
     Expected Square Jump Distance
     """
-    m, n, d = X.shape
-    result = np.sum((X[:,:n-1,:]- X [:,1:,:])**2, axis=-1) # compute the square norm of the jumps
-    result = np.mean(result, axis =-1)
-    result = np.mean(result) # mean over m chains
+    m, n, d = X.shape if len(X.shape) == 3 else (1, X.shape[0], X.shape[1])
+    if m != 1:
+        result = np.sum((X[:,:n-1,:]- X [:,1:,:])**2, axis=-1) # compute the square norm of the jumps
+        result = np.mean(result, axis =-1)
+        result = np.mean(result) # mean over m chains
+    else:
+        result = np.sum((X[:n - 1, :] - X[1:, :]) ** 2, axis=-1)  # compute the square norm of the jumps
+        result = np.mean(result)
     return result
 
 
