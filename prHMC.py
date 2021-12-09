@@ -94,7 +94,7 @@ def prHMC(theta_0, eps, emp_L, eta, N, M=None,U=None, pi=None, visited=None):
                 theta, v, i, sigma = (thetas[-1], -v, i, -sigma)
 
     return thetas
-
+### adding this solely for commit problem test
 
 def LFpath(theta, v, eps, L, M=None, gradU=None, U=None, pi=None):
     """
