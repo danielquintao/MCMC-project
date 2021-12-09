@@ -36,7 +36,7 @@ def stantardHMC(theta_0, eps, L, N, M=None, U=None, pi=None, return_vs=False):
 
     for k in range(N):
         v = np.random.multivariate_normal(np.zeros(theta_0.shape), M)
-        theta_star, v_star = leapfrog(thetas[-1], v, eps, L, M, gradU, U, pi)
+        theta_star, v_star = leapfrog(thetas[-1], v, eps, L, Minv, gradU, U, pi)
         rho = np.exp(H(thetas[-1], v, U, Minv) - H(theta_star, -v_star, U, Minv))
         event = np.random.uniform(0, 1)
         if event <= rho:

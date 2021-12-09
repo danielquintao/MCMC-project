@@ -41,7 +41,7 @@ def eHMC(theta_0, eps, emp_L, N, M=None,U=None, pi=None, visited=None):
 
         v=np.random.multivariate_normal(np.zeros(len(theta_0)), M)
         L= numpy.random.choice(emp_L, size=1)[0]
-        theta_star, v_star = leapfrog(thetas[-1], v, eps, L, M, gradU, U, pi, visited)
+        theta_star, v_star = leapfrog(thetas[-1], v, eps, L, Minv, gradU, U, pi, visited)
         rho = np.exp(H(thetas[-1], v, U, Minv) - H(theta_star, -v_star, U, Minv))
         event = np.random.uniform(0, 1)
         if event <= rho:

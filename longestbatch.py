@@ -37,7 +37,7 @@ def computeEmpiricalBatchDistribution(theta, eps, L, K, M=None, U=None, pi=None,
         visited_temp = [(theta, v)] if visited is not None else None
         theta_L, v_L, l = longestBatch(theta, v, eps, L, M, gradU, visited=visited_temp)
         if l < L:  # we still need to walk some steps
-            theta_L, v_L = leapfrog(theta_L, v_L, eps, L-l, M, gradU)
+            theta_L, v_L = leapfrog(theta_L, v_L, eps, L-l, Minv, gradU)
         # accept or reject update:
         u = np.random.rand()
         if np.log(u) < H(theta, v, U, Minv) - H(theta_L, -v_L, U, Minv):
@@ -75,7 +75,7 @@ def longestBatch(theta, v, eps, L, M=None, gradU=None, U=None, pi=None, visited=
     theta_L, v_L = None, None
     while np.sum((theta_ - theta) * (invM @ v_.reshape(-1,1)).flatten()) >= 0:  # while no U-turn
         l += 1
-        theta_, v_ = leapfrog(theta_, v_, eps, 1, M, gradU, U, pi, visited)
+        theta_, v_ = leapfrog(theta_, v_, eps, 1, invM, gradU, U, pi, visited)
         if l == L:
             theta_L, v_L = theta_.copy(), v_.copy()
     # return longest batch with state at step L if l >= L, else longest batch with last visited state

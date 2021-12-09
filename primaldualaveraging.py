@@ -8,18 +8,19 @@ def findReasonableEpsilon(theta, U, M=None):
     Heuristics for choosing an initial value of epsilon BEFORE tuning
     :return: eps
     '''
+    invM = None if M is None else np.linalg.inv(M)
     eps = 1
     n = np.size(theta)
     # v = st.norm(0, 1).rvs(n)
     mean, cov = np.zeros(n), np.eye(n)
     v = np.random.multivariate_normal(mean, cov)
-    theta_new, v_new = leapfrog(theta=theta, v=v, eps=eps, L=1, M=M, U=U)
+    theta_new, v_new = leapfrog(theta=theta, v=v, eps=eps, L=1, invM=invM, U=U)
     log_rho = log_accept_proba(theta, v, theta_new, v_new, U, M)
     condition = log_rho + np.log(2) #use to compare acceptance probability with 0.5
     a = 2.0 * (condition >0) - 1.0
     while a * condition > 0:
         eps = (2**a) * eps
-        theta_new, v_new = leapfrog(theta=theta, v=v, eps=eps, L=1, M=M, U=U)
+        theta_new, v_new = leapfrog(theta=theta, v=v, eps=eps, L=1, invM=invM, U=U)
         log_rho = log_accept_proba(theta, v, theta_new, v_new, U, M)
         condition = log_rho + np.log(2)
     return eps
