@@ -10,7 +10,7 @@ import autograd.numpy as np
 import numpy
 import time
 
-def eHMC(theta_0, eps, emp_L, N, M=None,U=None, pi=None, visited=None):
+def eHMC(theta_0, eps, emp_L, N, M=None,U=None, pi=None, visited=None, return_grad_count=False):
     '''
     :param theta_0: starting position (1D, otherwise we will flatten)
     :param eps: step size
@@ -21,6 +21,7 @@ def eHMC(theta_0, eps, emp_L, N, M=None,U=None, pi=None, visited=None):
     :param H: hamiltonian function H
     :param pi: target distribution up to a multiplicative constant (pi is prop. to exp(-U)). Defaults to None.
     :param visited: list to add each visited node
+    :param return_grad_count: whether to return the number of gradient evaluations
     :return: list of accepted positions
     '''
     theta_0 = theta_0.flatten()
@@ -37,6 +38,8 @@ def eHMC(theta_0, eps, emp_L, N, M=None,U=None, pi=None, visited=None):
         M = np.eye(len(theta_0))
     Minv = np.linalg.inv(M)
 
+    grad_count = 0
+
     for k in range(N):
 
         v=np.random.multivariate_normal(np.zeros(len(theta_0)), M)
@@ -50,8 +53,10 @@ def eHMC(theta_0, eps, emp_L, N, M=None,U=None, pi=None, visited=None):
         else:
             thetas.append(thetas[-1])
             momentums.append(v)
+        if return_grad_count:
+            grad_count += L
 
-    return thetas
+    return thetas if not return_grad_count else (thetas, grad_count)
 
 
 
