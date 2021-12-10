@@ -1,5 +1,9 @@
 import autograd.numpy as np
 from autograd import grad
+import tensorflow as tf
+import tensorflow_probability as tfp
+
+tfd = tfp.distributions
 
 class Simple2DGaussianMixture():
     """
@@ -67,6 +71,19 @@ class MultivariateNormalDistribution():
     def U(self, theta):
         v = theta.reshape(-1,1)
         return v.T @ self.sigmainv @ v / 2
+
+class MultivariateNormalDistributionTensorflowVersion():
+    def __init__(self):
+        self.dim = 10
+        mu = tf.zeros(self.dim)
+        sigma = np.eye(self.dim)
+        for i in range(self.dim):
+            for j in range(i):
+                sigma[i,j] = 0.99 ** abs(i-j)
+                sigma[j,i] = 0.99 ** abs(i-j)
+        sigma = tf.constant(sigma, dtype=mu.dtype)
+        mvn = tfd.MultivariateNormalTriL(loc=mu, scale_tril=tf.linalg.cholesky(sigma))
+        self.target_log_prob_fn = mvn.log_prob
 
 # TODO
 class BayesianLogisticError():
