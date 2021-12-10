@@ -21,8 +21,6 @@ np.random.seed(1)
 # for saving data
 NOW = int(time.time())
 
-# TODO -- normalize metrics w.r.t. gradient
-
 # some constants
 lambd = 2*np.pi  # target simulation length for dual averaging, lambda = L*eps where L is leapfrog's nb of steps
 deltas = np.arange(0.6, 1., 0.05)  # target acceptance probs for dual averaging; same as Wu, Stoehr, Robert paper
