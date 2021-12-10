@@ -25,9 +25,6 @@ def prHMC(theta_0, eps, emp_L, eta, N, M=None,U=None, pi=None, visited=None):
     :param visited: list to add each visited node
     :return: list of accepted positions
     '''
-    theta_0 = theta_0.flatten()
-    thetas = [theta_0]
-    momentums = []
 
     if U is None and pi is None:
         raise ValueError("U or pi must be given")
@@ -38,36 +35,66 @@ def prHMC(theta_0, eps, emp_L, eta, N, M=None,U=None, pi=None, visited=None):
     if M is None:
         M = np.eye(len(theta_0))
 
+    theta_0 = theta_0.flatten()
     v_0 = np.random.multivariate_normal(np.zeros(len(theta_0)), M)
-    w_=(theta_0, v_0)
+    w_ = (theta_0, v_0)
+    thetas = [theta_0]
+    momentums = []
+
     sigma=1
     i=1
     l=1
     Minv = np.linalg.inv(M)
 
-    for n in range(N):
+    for n in range(1, N):
         L= math.ceil(numpy.random.choice(emp_L, size=1)[0]/3)
-        mu = np.random.uniform(0, 1)
-        if mu < eta:
+        u = np.random.uniform(0, 1)
+        if u < eta:
             v = np.random.multivariate_normal(np.zeros(len(theta_0)), M)
-            w_=
-            print(LFpath(thetas[-1], v, eps, L, M, gradU, U, pi, visited))
+            w_= (np.transpose((thetas[-1], v)), LFpath(thetas[-1], v, eps, L, M, gradU, U, pi, visited)) #TODO
+            #print(LFpath(thetas[-1], v, eps, L, M, gradU, U, pi, visited))
             l=L+1
-            rho = np.exp(H(thetas[-1], v, U, Minv) - H(, , U, Minv))
+            rho =  #TODO yasmine: i don't understand how to compute this rho
             event = np.random.uniform(0, 1)
             if event <= rho:
-                theta=
-                v=
-                i=l
-                sigma=1
-
+                #TODO what are the indices of w+ in algo?
+                theta, v, i, sigma = (, , , 1)
             else:
-
+                theta, v, i, sigma = (thetas[-1], -v, 1, -1)
         else:
+            j = i + sigma*L
+            if sigma == 1:
+                delta = j-l
+            if sigma == -1:
+                delta = 1-j
 
+            if delta > 0:
+                l=l+delta
+                thetas_vs_star = []
+                thetas_minus_vs_star = []
+                (theta_star, v_star) = LFpath(thetas[-1], v, eps, delta, M, gradU, U, pi, visited)
+                thetas_vs_star.append((theta_star, v_star))
+                thetas_minus_vs_star.append((theta_star, -v_star))
+
+                if sigma==1:
+                    thetas_vs_star_T = list(np.transpose(thetas_vs_star))
+                    w_ = [w_] + thetas_vs_star_T
+                else:
+                    last_to_first = [x for x in thetas_minus_vs_star[::-1]]
+                    thetas_minus_vs__star_T = list(np.transpose(last_to_first))
+                    w_ = thetas_minus_vs__star_T + [w_]
+                    i,j = i+delta, 1
+
+            rho =  # TODO yasmine: i don't understand how to compute this rho
+            event = np.random.uniform(0, 1)
+            if event <= rho:
+                # TODO what are the indices of w+ in algo?
+                theta, v, i, sigma = (, , , sigma)
+            else:
+                theta, v, i, sigma = (thetas[-1], -v, i, -sigma)
 
     return thetas
-
+### adding this solely for commit problem test
 
 def LFpath(theta, v, eps, L, M=None, gradU=None, U=None, pi=None):
     """
