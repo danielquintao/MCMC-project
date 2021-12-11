@@ -11,9 +11,12 @@ import numpy
 import time
 import math
 
-def prHMC(theta_0, eps, emp_L, eta, N, M=None,U=None, pi=None, visited=None):
+
+# prHMC
+
+def prHMC(theta, eps, emp_L, eta, N, M=None, U=None, pi=None):
     '''
-    :param theta_0: starting position (1D, otherwise we will flatten)
+    :param theta: starting position (1D, otherwise we will flatten)
     :param eps: step size
     :param emp_L: empirical distribution of longest batches
     :param eta: refreshment probability
@@ -33,67 +36,68 @@ def prHMC(theta_0, eps, emp_L, eta, N, M=None,U=None, pi=None, visited=None):
     gradU = grad(U)
 
     if M is None:
-        M = np.eye(len(theta_0))
+        M = np.eye(len(theta))
 
-    theta_0 = theta_0.flatten()
-    v_0 = np.random.multivariate_normal(np.zeros(len(theta_0)), M)
-    w_ = (theta_0, v_0)
-    thetas = [theta_0]
+    theta = theta.flatten()
+    v_0 = np.random.multivariate_normal(np.zeros(len(theta)), M)
+    w_ = [(theta, v_0)]
     momentums = []
 
-    sigma=1
-    i=1
-    l=1
+    sigma = 1
+    i = 1
+    l = 1
     Minv = np.linalg.inv(M)
+    thetas = []
 
     for n in range(1, N):
-        L= math.ceil(numpy.random.choice(emp_L, size=1)[0]/3)
+        L = math.ceil(numpy.random.choice(emp_L, size=1)[0] / 3)
         u = np.random.uniform(0, 1)
         if u < eta:
-            v = np.random.multivariate_normal(np.zeros(len(theta_0)), M)
-            w_= (np.transpose((thetas[-1], v)), LFpath(thetas[-1], v, eps, L, M, gradU, U, pi, visited)) #TODO
-            #print(LFpath(thetas[-1], v, eps, L, M, gradU, U, pi, visited))
-            l=L+1
-            rho =  #TODO yasmine: i don't understand how to compute this rho
+            v = np.random.multivariate_normal(np.zeros(len(theta)), M)
+            w_ = [(theta, v)]
+            w_.extend(LFpath(theta, v, eps, L, M, gradU, U, pi))
+
+            l = L + 1
+            rho = np.exp(H(theta, v, U, Minv) - H(w_[-1][0], w_[-1][1], U, Minv))
             event = np.random.uniform(0, 1)
             if event <= rho:
-                #TODO what are the indices of w+ in algo?
-                theta, v, i, sigma = (, , , 1)
+                theta, v, i, sigma = (w_[-1][0], w_[-1][1], l, 1)
             else:
-                theta, v, i, sigma = (thetas[-1], -v, 1, -1)
+                theta, v, i, sigma = (theta, -v, 1, -1)
+            thetas.append(theta)
         else:
-            j = i + sigma*L
+            j = i + sigma * L
+
             if sigma == 1:
-                delta = j-l
+                delta = j - l
             if sigma == -1:
-                delta = 1-j
+                delta = 1 - j
 
             if delta > 0:
-                l=l+delta
-                thetas_vs_star = []
+
+                l = l + delta
                 thetas_minus_vs_star = []
-                (theta_star, v_star) = LFpath(thetas[-1], v, eps, delta, M, gradU, U, pi, visited)
-                thetas_vs_star.append((theta_star, v_star))
-                thetas_minus_vs_star.append((theta_star, -v_star))
+                thetas_vs_star = LFpath(theta, v, eps, delta, M, gradU, U, pi)
+                for m in range(delta - 1, -1, -1):
+                    thetas_minus_vs_star.append((thetas_vs_star[m][0], -thetas_vs_star[m][1]))
 
-                if sigma==1:
-                    thetas_vs_star_T = list(np.transpose(thetas_vs_star))
-                    w_ = [w_] + thetas_vs_star_T
+                if sigma == 1:
+                    w_.extend(thetas_vs_star)
                 else:
-                    last_to_first = [x for x in thetas_minus_vs_star[::-1]]
-                    thetas_minus_vs__star_T = list(np.transpose(last_to_first))
-                    w_ = thetas_minus_vs__star_T + [w_]
-                    i,j = i+delta, 1
+                    thetas_minus_vs_star.extend(w_)
+                    w_ = thetas_minus_vs_star
+                    i, j = i + delta, 1
 
-            rho =  # TODO yasmine: i don't understand how to compute this rho
+            rho = np.exp(H(theta, v, U, Minv) - H(w_[j - 1][0], -sigma * w_[j - 1][1], U, Minv))
             event = np.random.uniform(0, 1)
             if event <= rho:
-                # TODO what are the indices of w+ in algo?
-                theta, v, i, sigma = (, , , sigma)
+                theta, v, i, sigma = (w_[j - 1][0], -sigma * w_[j - 1][1], j, sigma)
             else:
-                theta, v, i, sigma = (thetas[-1], -v, i, -sigma)
-
+                theta, v, i, sigma = (theta, -v, i, -sigma)
+            thetas.append(theta)
     return thetas
+
+
 ### adding this solely for commit problem test
 
 def LFpath(theta, v, eps, L, M=None, gradU=None, U=None, pi=None):
