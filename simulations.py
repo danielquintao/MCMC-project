@@ -24,10 +24,10 @@ NOW = int(time.time())
 # some constants
 lambd = 2*np.pi  # target simulation length for dual averaging, lambda = L*eps where L is leapfrog's nb of steps
 deltas = np.arange(0.6, 1., 0.05)  # target acceptance probs for dual averaging; same as Wu, Stoehr, Robert paper
-n_chains = 5
+n_chains = 10
 n_tunning_eps = 500  # n iterations for tunning epsilon
 n_emp_batch_distr = 200  # n iterations for computing the empirical batch distribution
-n_iter = 2000  # n samples for the MCMC
+n_iter = 200  # n samples for the MCMC
 
 ########################################################
 # Simulation: Multivariate Normal Distribution
@@ -122,13 +122,15 @@ np.save('./simu_output/eHMC_{}-chains_{}-iters_{}'.format(n_chains,n_iter,NOW),n
 
 # compute metrics
 ##  NUTS
-minESS_per_chain_NUTS, minESS_NUTS = [], []
-ESJD_per_chain_NUTS, ESJD_NUTS = [], []
+minESS_per_chain_NUTS, minESS_NUTS, median_minESS_NUTS = [], [], []
+ESJD_per_chain_NUTS, ESJD_NUTS, median_ESJD_NUTS = [], [], []
 # TODO -- add KS distance
 print("Computing metrics for NUTS...")
 compute_for_each = True  # whether to compute the metrics for each individual chain (and delta) or only for each delta
 for experiments,delta,grad_count_list in zip(NUTS_out,deltas,grad_evals_NUTS):  # one list of experiments per delta
     print("\tdelta = {}".format(delta))
+    temp_minESS = []
+    temp_ESJD = []
     if compute_for_each:
         for sampling,grad_count in zip(experiments,grad_count_list):  # n_chains samplings per list of experiments
             X = np.array(sampling)  # X has shape (n_iter, dim)
@@ -136,31 +138,37 @@ for experiments,delta,grad_count_list in zip(NUTS_out,deltas,grad_evals_NUTS):  
             min_ess = minESS(X)/grad_count
             print('\t\tminESS for single chain = {}, took {:.4f}s'.format(min_ess, time.time()-START))
             minESS_per_chain_NUTS.append(min_ess)
+            temp_minESS.append(min_ess)
             START = time.time()
             esjd = ESJD(X)/grad_count
             print('\t\tESJD for single chain = {}, took {:.4f}s'.format(esjd, time.time() - START))
             ESJD_per_chain_NUTS.append(esjd)
+            temp_ESJD.append(esjd)
     X = np.array(experiments)
     START = time.time()
     min_ess = minESS(X)/sum(grad_count_list)
     print('\t\tcalibrated minESS = {}, took {:.4f}s'.format(min_ess, time.time() - START))
     minESS_NUTS.append(min_ess)
+    median_minESS_NUTS.append(np.median(temp_minESS))
     START = time.time()
-    esjd = ESJD(X)/sum(grad_count_list)
+    esjd = ESJD(X)/(sum(grad_count_list)/n_chains)  # divide by n_chains because ESJD(.) computes mean on chains
     print('\t\tcalibrated ESJD = {}, took {:.4f}s'.format(esjd, time.time() - START))
     ESJD_NUTS.append(esjd)
+    median_ESJD_NUTS.append(np.median(temp_ESJD))
 np.save('./simu_output/minESS_NUTS_{}-chains_{}-iters_{}'.format(n_chains,n_iter,NOW),np.array(minESS_NUTS))
 np.save('./simu_output/minESS_PER_CHAIN_NUTS_{}-chains_{}-iters_{}'.format(n_chains,n_iter,NOW),np.array(minESS_per_chain_NUTS))
 np.save('./simu_output/ESJD_NUTS_{}-chains_{}-iters_{}'.format(n_chains,n_iter,NOW),np.array(ESJD_NUTS))
 np.save('./simu_output/ESJD_PER_CHAIN_NUTS_{}-chains_{}-iters_{}'.format(n_chains,n_iter,NOW),np.array(ESJD_per_chain_NUTS))
 ##  eHMC
-minESS_per_chain_eHMC, minESS_eHMC = [], []
-ESJD_per_chain_eHMC, ESJD_eHMC = [], []
+minESS_per_chain_eHMC, minESS_eHMC, median_minESS_eHMC = [], [], []
+ESJD_per_chain_eHMC, ESJD_eHMC, median_ESJD_eHMC = [], [], []
 # TODO -- add KS distance
 print("Computing metrics for eHMC...")
 compute_for_each = True  # whether to compute the metrics for each individual chain (and delta) or only for each delta
 for experiments,delta,grad_count_list in zip(eHMC_out,deltas,grad_evals_eHMC):  # one list of experiments per delta
     print("\tdelta = {}".format(delta))
+    temp_minESS = []
+    temp_ESJD = []
     if compute_for_each:
         for sampling,grad_count in zip(experiments,grad_count_list):  # n_chains samplings per list of experiments
             X = np.array(sampling)  # X has shape (n_iter, dim)
@@ -168,19 +176,23 @@ for experiments,delta,grad_count_list in zip(eHMC_out,deltas,grad_evals_eHMC):  
             min_ess = minESS(X)/grad_count
             print('\t\tcalibrated minESS for single chain = {}, took {:.4f}s'.format(min_ess, time.time()-START))
             minESS_per_chain_eHMC.append(min_ess)
+            temp_minESS.append(min_ess)
             START = time.time()
             esjd = ESJD(X)/grad_count
             print('\t\tcalibrated ESJD for single chain = {}, took {:.4f}s'.format(esjd, time.time() - START))
             ESJD_per_chain_eHMC.append(esjd)
+            temp_ESJD.append(esjd)
     X = np.array(experiments)
     START = time.time()
     min_ess = minESS(X)/sum(grad_count_list)
     print('\t\tminESS = {}, took {:.4f}s'.format(min_ess, time.time() - START))
     minESS_eHMC.append(min_ess)
+    median_minESS_eHMC.append(np.median(temp_minESS))
     START = time.time()
-    esjd = ESJD(X)/sum(grad_count_list)
+    esjd = ESJD(X)/(sum(grad_count_list)/n_chains)  # divide by n_chains because ESJD(.) computes mean on chains
     print('\t\tESJD = {}, took {:.4f}s'.format(esjd, time.time() - START))
     ESJD_eHMC.append(esjd)
+    median_ESJD_eHMC.append(np.median(temp_ESJD))
 np.save('./simu_output/minESS_eHMC_{}-chains_{}-iters_{}'.format(n_chains,n_iter,NOW),np.array(minESS_eHMC))
 np.save('./simu_output/minESS_PER_CHAIN_eHMC_{}-chains_{}-iters_{}'.format(n_chains,n_iter,NOW),np.array(minESS_per_chain_eHMC))
 np.save('./simu_output/ESJD_eHMC_{}-chains_{}-iters_{}'.format(n_chains,n_iter,NOW),np.array(ESJD_eHMC))
@@ -193,27 +205,40 @@ plt.figure()
 ax1 = plt.subplot(221)
 if len(minESS_per_chain_eHMC) > 0:
     ax1.scatter(x_for_each, minESS_per_chain_eHMC, color='k')
-ax1.plot(deltas, minESS_eHMC, 'rD-')
-ax1.set_title('minESS, eHMC')
+ax1.plot(deltas, minESS_eHMC, 'bs--')
+ax1.plot(deltas, median_minESS_eHMC, 'rD-')
+ax1.set_title('minESS/#{grad evals}, eHMC')
+for label in ax1.get_xticklabels():
+    label.set_visible(False)
 
 ax2 = plt.subplot(222, sharey=ax1)
 if len(minESS_per_chain_NUTS) > 0:
     ax2.scatter(x_for_each, minESS_per_chain_NUTS, color='k')
-ax2.plot(deltas, minESS_NUTS, 'rD-')
-ax2.set_title('minESS, NUTS')
+ax2.plot(deltas, minESS_NUTS, 'bs--')
+ax2.plot(deltas, median_minESS_NUTS, 'rD-')
+for label in ax2.get_xticklabels():
+    label.set_visible(False)
+for label in ax2.get_yticklabels():
+    label.set_visible(False)
+ax2.set_title('minESS/#{grad evals}, NUTS')
 
 ax3 = plt.subplot(223, sharex=ax1)
 if len(ESJD_per_chain_eHMC) > 0:
     ax3.scatter(x_for_each, ESJD_per_chain_eHMC, color='k')
-ax3.plot(deltas, ESJD_eHMC, 'rD-')
+ax3.plot(deltas, ESJD_eHMC, 'bs--')
+ax3.plot(deltas, median_ESJD_eHMC, 'rD-')
 ax3.set_xlabel('target acceptance rate')
-ax3.set_title('ESJD, eHMC')
+ax3.set_title('ESJD/#{grad evals}, eHMC')
 
 ax4 = plt.subplot(224, sharex=ax2, sharey=ax3)
 if len(ESJD_per_chain_NUTS) > 0:
     ax4.scatter(x_for_each, ESJD_per_chain_NUTS, color='k')
-ax4.plot(deltas, ESJD_NUTS, 'rD-')
+ax4.plot(deltas, ESJD_NUTS, 'bs--')
+ax4.plot(deltas, median_ESJD_NUTS, 'rD-')
 ax4.set_xlabel('target acceptance rate')
-ax4.set_title('ESJD, NUTS')
+ax4.set_title('ESJD/#{grad evals}, NUTS')
+for label in ax2.get_yticklabels():
+    label.set_visible(False)
+
 
 plt.show()
