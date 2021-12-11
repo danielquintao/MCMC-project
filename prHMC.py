@@ -14,7 +14,7 @@ import math
 
 # prHMC
 
-def prHMC(theta, eps, emp_L, eta, N, M=None, U=None, pi=None):
+def prHMC(theta, eps, emp_L, eta, N, M=None, U=None, pi=None, return_grad_count=False):
     '''
     :param theta: starting position (1D, otherwise we will flatten)
     :param eps: step size
@@ -48,7 +48,7 @@ def prHMC(theta, eps, emp_L, eta, N, M=None, U=None, pi=None):
     l = 1
     Minv = np.linalg.inv(M)
     thetas = []
-
+    grad_count = 0
     for n in range(1, N):
         L = math.ceil(numpy.random.choice(emp_L, size=1)[0] / 3)
         u = np.random.uniform(0, 1)
@@ -56,7 +56,7 @@ def prHMC(theta, eps, emp_L, eta, N, M=None, U=None, pi=None):
             v = np.random.multivariate_normal(np.zeros(len(theta)), M)
             w_ = [(theta, v)]
             w_.extend(LFpath(theta, v, eps, L, M, gradU, U, pi))
-
+            grad_count += L+1
             l = L + 1
             rho = np.exp(H(theta, v, U, Minv) - H(w_[-1][0], w_[-1][1], U, Minv))
             event = np.random.uniform(0, 1)
@@ -78,6 +78,7 @@ def prHMC(theta, eps, emp_L, eta, N, M=None, U=None, pi=None):
                 l = l + delta
                 thetas_minus_vs_star = []
                 thetas_vs_star = LFpath(theta, v, eps, delta, M, gradU, U, pi)
+                grad_count += delta+1
                 for m in range(delta - 1, -1, -1):
                     thetas_minus_vs_star.append((thetas_vs_star[m][0], -thetas_vs_star[m][1]))
 
@@ -95,7 +96,7 @@ def prHMC(theta, eps, emp_L, eta, N, M=None, U=None, pi=None):
             else:
                 theta, v, i, sigma = (theta, -v, i, -sigma)
             thetas.append(theta)
-    return thetas
+    return thetas if not return_grad_count else (thetas, grad_count)
 
 
 ### adding this solely for commit problem test
