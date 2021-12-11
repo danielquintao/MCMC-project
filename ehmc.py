@@ -54,7 +54,7 @@ def eHMC(theta_0, eps, emp_L, N, M=None,U=None, pi=None, visited=None, return_gr
             thetas.append(thetas[-1])
             momentums.append(v)
         if return_grad_count:
-            grad_count += L
+            grad_count += L+1
 
     return thetas if not return_grad_count else (thetas, grad_count)
 
