@@ -1,5 +1,5 @@
 # Python implementation of *Faster Hamiltonian Monte Carlo by Learning Leapfrog Scale¹*
-### ¹ *(C Robert, C Wu, J Stoehr, CP Robert - 2019)*
+### ¹ [*(C Wu, J Stoehr, CP Robert - 2019)*](https://arxiv.org/abs/1810.04449)
 
 
 We implemented and tested the Empirical Hamiltonian Monte Carlo (eHMC) and Partially Refreshed Hamiltonian Monte Carlo
